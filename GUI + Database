@@ -1,0 +1,47 @@
+import javax.swing.*;
+import java.sql.*;
+
+public class Practical3 {
+    public static void main(String[] args) {
+
+        JFrame f = new JFrame("Registration Form");
+
+        JLabel l1 = new JLabel("Name:");
+        l1.setBounds(50, 50, 100, 30);
+
+        JTextField t1 = new JTextField();
+        t1.setBounds(150, 50, 150, 30);
+
+        JButton b = new JButton("Save");
+        b.setBounds(150, 100, 100, 30);
+
+        b.addActionListener(e -> {
+            try {
+                Class.forName("com.mysql.cj.jdbc.Driver");
+
+                Connection con = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/practical3_db","root","");
+
+                PreparedStatement ps = con.prepareStatement(
+                    "INSERT INTO user(name) VALUES(?)");
+
+                ps.setString(1, t1.getText());
+                ps.executeUpdate();
+
+                JOptionPane.showMessageDialog(f, "Data Saved Successfully");
+
+                con.close();
+            } catch(Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        f.add(l1);
+        f.add(t1);
+        f.add(b);
+
+        f.setSize(400, 300);
+        f.setLayout(null);
+        f.setVisible(true);
+    }
+}
