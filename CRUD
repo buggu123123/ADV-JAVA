@@ -1,22 +1,24 @@
-package practical_2;
+package com.mycompany.practical2;
 
 import java.sql.*;
 import java.util.Scanner;
 
-public class Practical_2 {
+public class Practical2 {
     public static void main(String[] args) {
         try {
+            // Load Driver (optional in new JDBC but safe for exam)
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             Connection con = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3307/jdbc_demo","root",""
+                "jdbc:mysql://localhost:3306/practical2","root",""
             );
 
-            Statement stmt = con.createStatement();
             Scanner sc = new Scanner(System.in);
 
+            // Create table
+            Statement stmt = con.createStatement();
             String createTable =
-                "CREATE TABLE IF NOT EXISTS Stud (" +
+                "CREATE TABLE IF NOT EXISTS student (" +
                 "student_id INT PRIMARY KEY, " +
                 "name VARCHAR(50), " +
                 "course VARCHAR(50), " +
@@ -52,18 +54,24 @@ public class Practical_2 {
 
                         System.out.print("Enter Marks: ");
                         int marks = sc.nextInt();
-                        sc.nextLine();
 
-                        String insert =
-                            "INSERT INTO student VALUES (" +
-                            id + ",'" + name + "','" + course + "'," + marks + ")";
-                        stmt.executeUpdate(insert);
+                        String insertQuery =
+                            "INSERT INTO student VALUES (?, ?, ?, ?)";
 
-                        System.out.println("Student record inserted successfully");
+                        PreparedStatement psInsert = con.prepareStatement(insertQuery);
+                        psInsert.setInt(1, id);
+                        psInsert.setString(2, name);
+                        psInsert.setString(3, course);
+                        psInsert.setInt(4, marks);
+
+                        psInsert.executeUpdate();
+                        System.out.println("Student inserted successfully");
                         break;
 
                     case 2:
-                        ResultSet rs = stmt.executeQuery("SELECT * FROM student");
+                        String selectQuery = "SELECT * FROM student";
+                        PreparedStatement psSelect = con.prepareStatement(selectQuery);
+                        ResultSet rs = psSelect.executeQuery();
 
                         System.out.println("\nStudent Records:");
                         while (rs.next()) {
@@ -86,39 +94,43 @@ public class Practical_2 {
 
                         System.out.print("Enter New Marks: ");
                         int newMarks = sc.nextInt();
-                        sc.nextLine();
 
-                        String update =
-                            "UPDATE student SET course='" + newCourse +
-                            "', marks=" + newMarks +
-                            " WHERE student_id=" + uid";
+                        String updateQuery =
+                            "UPDATE student SET course=?, marks=? WHERE student_id=?";
 
-                        int rowsUpdated = stmt.executeUpdate(update);
+                        PreparedStatement psUpdate = con.prepareStatement(updateQuery);
+                        psUpdate.setString(1, newCourse);
+                        psUpdate.setInt(2, newMarks);
+                        psUpdate.setInt(3, uid);
+
+                        int rowsUpdated = psUpdate.executeUpdate();
 
                         if (rowsUpdated > 0)
-                            System.out.println("Student record updated successfully");
+                            System.out.println("Student updated successfully");
                         else
-                            System.out.println("Student ID not found");
+                            System.out.println("Student not found");
                         break;
 
                     case 4:
                         System.out.print("Enter Student ID to delete: ");
                         int did = sc.nextInt();
-                        sc.nextLine();
 
-                        String delete =
-                            "DELETE FROM student WHERE student_id=" + did;
+                        String deleteQuery =
+                            "DELETE FROM student WHERE student_id=?";
 
-                        int rowsDeleted = stmt.executeUpdate(delete);
+                        PreparedStatement psDelete = con.prepareStatement(deleteQuery);
+                        psDelete.setInt(1, did);
+
+                        int rowsDeleted = psDelete.executeUpdate();
 
                         if (rowsDeleted > 0)
-                            System.out.println("Student record deleted successfully");
+                            System.out.println("Student deleted successfully");
                         else
-                            System.out.println("Student ID not found");
+                            System.out.println("Student not found");
                         break;
 
                     case 5:
-                        System.out.println("Exiting program...");
+                        System.out.println("Exiting...");
                         break;
 
                     default:
@@ -126,6 +138,8 @@ public class Practical_2 {
                 }
 
             } while (choice != 5);
+
+            con.close();
 
         } catch (ClassNotFoundException e) {
             System.out.println("JDBC Driver not found");
