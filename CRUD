@@ -1,36 +1,46 @@
+package practical_2;
+
 import java.sql.*;
 import java.util.Scanner;
 
-public class Practical2 {
+public class Practical_2 {
     public static void main(String[] args) {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             Connection con = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/jdbc_demo","root","");
+                "jdbc:mysql://localhost:3307/jdbc_demo","root",""
+            );
 
             Statement stmt = con.createStatement();
             Scanner sc = new Scanner(System.in);
 
-            stmt.executeUpdate(
-                "CREATE TABLE IF NOT EXISTS student(" +
+            String createTable =
+                "CREATE TABLE IF NOT EXISTS Stud (" +
                 "student_id INT PRIMARY KEY, " +
                 "name VARCHAR(50), " +
                 "course VARCHAR(50), " +
-                "marks INT)"
-            );
+                "marks INT)";
+            stmt.executeUpdate(createTable);
 
             int choice;
 
             do {
-                System.out.println("\n1.Insert 2.Display 3.Update 4.Delete 5.Exit");
-                System.out.print("Enter choice: ");
+                System.out.println("\n----- STUDENT MENU -----");
+                System.out.println("1. Insert Student");
+                System.out.println("2. Display Students");
+                System.out.println("3. Update Student");
+                System.out.println("4. Delete Student");
+                System.out.println("5. Exit");
+                System.out.print("Enter your choice: ");
+
                 choice = sc.nextInt();
                 sc.nextLine();
 
-                switch(choice) {
+                switch (choice) {
+
                     case 1:
-                        System.out.print("Enter ID: ");
+                        System.out.print("Enter Student ID: ");
                         int id = sc.nextInt();
                         sc.nextLine();
 
@@ -42,18 +52,21 @@ public class Practical2 {
 
                         System.out.print("Enter Marks: ");
                         int marks = sc.nextInt();
+                        sc.nextLine();
 
-                        String insert = "INSERT INTO student VALUES(" +
-                                id + ",'" + name + "','" + course + "'," + marks + ")";
+                        String insert =
+                            "INSERT INTO student VALUES (" +
+                            id + ",'" + name + "','" + course + "'," + marks + ")";
                         stmt.executeUpdate(insert);
 
-                        System.out.println("Inserted Successfully");
+                        System.out.println("Student record inserted successfully");
                         break;
 
                     case 2:
                         ResultSet rs = stmt.executeQuery("SELECT * FROM student");
 
-                        while(rs.next()) {
+                        System.out.println("\nStudent Records:");
+                        while (rs.next()) {
                             System.out.println(
                                 rs.getInt("student_id") + " " +
                                 rs.getString("name") + " " +
@@ -64,46 +77,60 @@ public class Practical2 {
                         break;
 
                     case 3:
-                        System.out.print("Enter ID to update: ");
+                        System.out.print("Enter Student ID to update: ");
                         int uid = sc.nextInt();
                         sc.nextLine();
 
-                        System.out.print("Enter new course: ");
+                        System.out.print("Enter New Course: ");
                         String newCourse = sc.nextLine();
 
-                        System.out.print("Enter new marks: ");
+                        System.out.print("Enter New Marks: ");
                         int newMarks = sc.nextInt();
+                        sc.nextLine();
 
-                        String update = "UPDATE student SET course='" +
-                                newCourse + "', marks=" + newMarks +
-                                " WHERE student_id=" + uid;
+                        String update =
+                            "UPDATE student SET course='" + newCourse +
+                            "', marks=" + newMarks +
+                            " WHERE student_id=" + uid";
 
-                        stmt.executeUpdate(update);
-                        System.out.println("Updated Successfully");
+                        int rowsUpdated = stmt.executeUpdate(update);
+
+                        if (rowsUpdated > 0)
+                            System.out.println("Student record updated successfully");
+                        else
+                            System.out.println("Student ID not found");
                         break;
 
                     case 4:
-                        System.out.print("Enter ID to delete: ");
+                        System.out.print("Enter Student ID to delete: ");
                         int did = sc.nextInt();
+                        sc.nextLine();
 
-                        String delete = "DELETE FROM student WHERE student_id=" + did;
-                        stmt.executeUpdate(delete);
+                        String delete =
+                            "DELETE FROM student WHERE student_id=" + did;
 
-                        System.out.println("Deleted Successfully");
+                        int rowsDeleted = stmt.executeUpdate(delete);
+
+                        if (rowsDeleted > 0)
+                            System.out.println("Student record deleted successfully");
+                        else
+                            System.out.println("Student ID not found");
                         break;
 
                     case 5:
-                        System.out.println("Exit");
+                        System.out.println("Exiting program...");
                         break;
 
                     default:
-                        System.out.println("Invalid Choice");
+                        System.out.println("Invalid choice");
                 }
 
-            } while(choice != 5);
+            } while (choice != 5);
 
-        } catch(Exception e) {
-            System.out.println(e);
+        } catch (ClassNotFoundException e) {
+            System.out.println("JDBC Driver not found");
+        } catch (SQLException e) {
+            System.out.println("SQL Error: " + e.getMessage());
         }
     }
 }
