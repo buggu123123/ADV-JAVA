@@ -102,3 +102,65 @@ public class Register extends JFrame {
         new Register();
     }
 }
+
+//ViewData.java
+package gui;
+
+import db.DB;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.SQLException;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+public class ViewData extends JFrame {
+
+    JTable table;
+
+    public ViewData() {
+
+        setTitle("User Data");
+        setSize(500, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        table = new JTable();
+        DefaultTableModel model = new DefaultTableModel();
+
+        // Columns
+        model.addColumn("ID");
+        model.addColumn("Name");
+        model.addColumn("Email");
+        model.addColumn("Phone");
+
+        table.setModel(model);
+
+        Connection con = DB.getCon();
+
+        if (con == null) {
+            JOptionPane.showMessageDialog(this, "Database Not Connected");
+            return;
+        }
+
+        try {
+            Statement st = con.createStatement();
+            ResultSet rs = st.executeQuery("SELECT * FROM user");
+
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("email_id"),
+                        rs.getString("phone_number")
+                });
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Data Fetch Failed: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        add(new JScrollPane(table));
+        setVisible(true);
+    }
+}
