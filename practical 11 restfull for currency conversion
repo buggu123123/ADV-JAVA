@@ -1,0 +1,75 @@
+CurrencyServlet.java
+
+package com.example;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+
+@WebServlet("/convert")
+public class CurrencyServlet extends HttpServlet {
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        response.setContentType("text/plain");
+        PrintWriter out = response.getWriter();
+
+        String from = request.getParameter("from");
+        String to = request.getParameter("to");
+        String amt = request.getParameter("amount");
+
+        // ✅ Validation
+        if (from == null || to == null || amt == null ||
+            from.isEmpty() || to.isEmpty() || amt.isEmpty()) {
+
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.println("Error: Missing parameters (from, to, amount required)");
+            return;
+        }
+
+        double amount;
+
+        try {
+            amount = Double.parseDouble(amt);
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.println("Error: Invalid amount format");
+            return;
+        }
+
+        double result = convert(from, to, amount);
+
+        // ✅ REST-style response
+        response.setStatus(HttpServletResponse.SC_OK);
+        out.println("From: " + from.toUpperCase());
+        out.println("To: " + to.toUpperCase());
+        out.println("Amount: " + amount);
+        out.println("Converted Amount: " + result);
+    }
+
+    private double convert(String from, String to, double amount) {
+
+        // ✅ Currency rates (example)
+        double usd = 83;   // 1 USD = 83 INR
+        double eur = 90;   // 1 EUR = 90 INR
+        double inr = 1;
+
+        double fromRate = getRate(from, usd, eur, inr);
+        double toRate = getRate(to, usd, eur, inr);
+
+        return (amount / fromRate) * toRate;
+    }
+
+    private double getRate(String currency, double usd, double eur, double inr) {
+
+        switch (currency.toUpperCase()) {
+            case "USD": return usd;
+            case "EUR": return eur;
+            case "INR": return inr;
+            default: return inr;  // fallback
+        }
+    }
+}
