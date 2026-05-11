@@ -1,0 +1,94 @@
+index.jsp
+<%@ page contentType="text/html;charset=UTF-8" %>
+<html>
+<head>
+    <title>JAX-RS Client</title>
+</head>
+<body>
+
+<h2>Student Data</h2>
+
+<pre>
+${data}
+</pre>
+
+</body>
+</html>
+
+ClientServlet.java
+package com.servlet;
+
+import com.client.MyClient;
+import java.io.IOException;
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+
+@WebServlet("/client")
+public class ClientServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String result = MyClient.getData();
+
+        request.setAttribute("data", result);
+
+        request.getRequestDispatcher("index.jsp").forward(request, response);
+    }
+}
+
+MyClient.jsp
+package com.client;
+
+import javax.ws.rs.client.*;
+import javax.ws.rs.core.MediaType;
+
+public class MyClient {
+
+    private static final String URL =
+        "http://localhost:8080/Practical_14/webapi/students";
+
+    public static String getData() {
+
+        Client client = ClientBuilder.newClient();
+
+        String response = client
+                .target(URL)
+                .request(MediaType.APPLICATION_JSON)
+                .get(String.class);
+
+        client.close();
+
+        return response;
+    }
+}
+
+StudentResource.java
+package com.api;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+
+@Path("/students")
+public class StudentResource {
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getStudents() {
+
+        return "[{\"id\":1,\"name\":\"Abc\"}," +
+               "{\"id\":2,\"name\":\"Xyz\"}]";
+    }
+}
+
+MyApplication.java
+package com.api;
+
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+
+@ApplicationPath("/webapi")
+public class ApplicationConfig extends Application {
+}
