@@ -1,0 +1,170 @@
+index.jsp
+<h2>Phonebook CRUD</h2>
+
+<!-- ADD -->
+<form action="api/phone/add" method="post">
+    Name: <input type="text" name="name" required>
+    <input type="submit" value="Add">
+</form>
+
+<br>
+
+<!-- UPDATE -->
+<form action="api/phone/update" method="post">
+    ID: <input type="number" name="id" required>
+    Name: <input type="text" name="name" required>
+    <input type="submit" value="Update">
+</form>
+
+<br>
+
+<!-- DELETE -->
+<form action="api/phone/delete" method="post">
+    ID: <input type="number" name="id" required>
+    <input type="submit" value="Delete">
+</form>
+
+<br>
+
+<!-- READ -->
+<a href="api/phone/view">View All</a>
+
+PhoneBookService.java
+package com.example;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.sql.*;
+
+@Path("/phone")
+public class PhoneBookService {
+
+    private Connection getConnection() throws Exception {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        return DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/phonebook", "root", "");
+    }
+
+    // CREATE
+    @POST
+    @Path("/add")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String add(@FormParam("name") String name) {
+
+        if (name == null || name.trim().isEmpty())
+            return "Error: Name required";
+
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "INSERT INTO contacts(name) VALUES(?)")) {
+
+            ps.setString(1, name);
+            ps.executeUpdate();
+            return "Added Successfully";
+
+        } catch (Exception e) {
+            return e.toString();
+        }
+    }
+
+    // READ
+    @GET
+    @Path("/view")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String view() {
+
+        StringBuilder result = new StringBuilder();
+
+        try (Connection con = getConnection();
+             Statement st = con.createStatement();
+             ResultSet rs = st.executeQuery("SELECT * FROM contacts")) {
+
+            while (rs.next()) {
+                result.append(rs.getInt("id"))
+                      .append(" : ")
+                      .append(rs.getString("name"))
+                      .append("\n");
+            }
+
+        } catch (Exception e) {
+            return e.toString();
+        }
+
+        return result.toString();
+    }
+
+    // UPDATE
+    @POST
+    @Path("/update")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String update(@FormParam("id") int id,
+                         @FormParam("name") String name) {
+
+        if (name == null || name.trim().isEmpty())
+            return "Error: Name required";
+
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "UPDATE contacts SET name=? WHERE id=?")) {
+
+            ps.setString(1, name);
+            ps.setInt(2, id);
+
+            int rows = ps.executeUpdate();
+
+            return rows > 0 ? "Updated Successfully" : "ID Not Found";
+
+        } catch (Exception e) {
+            return e.toString();
+        }
+    }
+
+    // DELETE
+    @POST
+    @Path("/delete")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_PLAIN)
+    public String delete(@FormParam("id") int id) {
+
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "DELETE FROM contacts WHERE id=?")) {
+
+            ps.setInt(1, id);
+
+            int rows = ps.executeUpdate();
+
+            return rows > 0 ? "Deleted Successfully" : "ID Not Found";
+
+        } catch (Exception e) {
+            return e.toString();
+        }
+    }
+}
+
+
+MyApp.java
+package com.example;
+
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+
+@ApplicationPath("/api")
+public class MyApp extends Application {
+}
+
+
+---------------------------------------------
+
+
+
+CREATE DATABASE phonebook;
+
+USE phonebook;
+
+CREATE TABLE contacts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100)
+);
