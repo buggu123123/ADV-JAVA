@@ -1,0 +1,88 @@
+accesserror.jsp
+
+<html>
+<head>
+    <title>Limit Exceeded</title>
+</head>
+<body>
+    <h1 style="color:red;">
+        Maximum 3 Users Allowed! <br>
+        Please try again later.
+    </h1>
+</body>
+</html>
+
+index.jsp
+
+<%@ page contentType="text/html" pageEncoding="UTF-8"%>
+
+<%
+    Integer users = (Integer)application.getAttribute("users");
+
+    if(users == null){
+        users = 0;
+    }
+
+    if(users > 3){
+        response.sendRedirect("accesserror.jsp");   // ✅ fixed name
+        return;
+    }
+%>
+
+<html>
+<head>
+    <title>Home Page</title>
+</head>
+<body>
+
+<h2>Welcome User!</h2>
+<h3>Active Users: <%= users %></h3>
+
+</body>
+</html>
+
+
+UserListener.java
+
+package listener;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionListener;
+
+public class UserListener implements HttpSessionListener {
+
+    public void sessionCreated(HttpSessionEvent se) {
+
+        ServletContext context = se.getSession().getServletContext();
+
+        Integer userCount = (Integer) context.getAttribute("users");
+
+        if (userCount == null) {
+            userCount = 0;
+        }
+
+        userCount++;   // ✅ FIXED
+
+        context.setAttribute("users", userCount);
+
+        System.out.println("User Entered: " + userCount);
+    }
+
+    public void sessionDestroyed(HttpSessionEvent se) {
+
+        ServletContext context = se.getSession().getServletContext();
+
+        Integer userCount = (Integer) context.getAttribute("users");
+
+        if (userCount == null) {
+            userCount = 0;
+        }
+
+        userCount--;   // decrease count
+
+        context.setAttribute("users", userCount);
+
+        System.out.println("User Left: " + userCount);
+    }
+}
